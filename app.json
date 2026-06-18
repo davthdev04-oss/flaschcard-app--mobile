@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Flashcard React Native",
+    "slug": "flashcard-react-native",
+    "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "extra": {
+      "SUPABASE_URL": "https://pzcgjnebrgsbeirocgrq.supabase.co",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6Y2dqbmVicmdzYmVpcm9jZ3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0ODM3NzEsImV4cCI6MjA5NzA1OTc3MX0.YGaiwP4eVUsabmI8T3sOoTJpTsON8kI8w1POTAD0Axg",
+      "eas": {
+        "projectId": "f1e6cb7c-ee16-4331-8f30-9cbbe55a6c3e"
+      }
+    }
+  }
+}
