@@ -11,7 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { Category } from '../types/flashcard';
 
@@ -22,9 +24,11 @@ export function CategoriesScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [name, setName] = useState('');
+  const [subCatCounts, setSubCatCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchCategories();
+    fetchSubCat();
   }, []);
 
   const fetchCategories = async () => {
@@ -41,6 +45,26 @@ export function CategoriesScreen() {
     setCategories(data || []);
     setLoading(false);
   };
+
+const fetchSubCat = async () => {
+  const { data, error } = await supabase
+    .from('subcategories')
+    .select('category_id');
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const counts: Record<string, number> = {};
+
+  data?.forEach((subcat) => {
+    counts[subcat.category_id] =
+      (counts[subcat.category_id] || 0) + 1;
+  });
+
+  setSubCatCounts(counts);
+};
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -95,15 +119,31 @@ export function CategoriesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.page}>
+    <RNSafeAreaView style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.title}>Categories</Text>
+        <Text style={styles.title}>Library</Text>
         <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
           <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
+      <View 
+      style={styles.search_order}>
+        <TextInput style={styles.textInput}
+        placeholder='Search'/>
+         <View style={styles.pickerdrop}>
+          <Picker
+          style={{marginRight: -8 }}
+           selectedValue= "A-Z"
+           mode="dropdown"
+          >
+          <Picker.Item label="A-Z" value="A-Z" />
+        </Picker>
+        </View>
+      </View>
+  
+      <FlatList 
+      numColumns={2}
         data={categories}
         keyExtractor={(item) => item.id}
         refreshing={loading}
@@ -115,8 +155,12 @@ export function CategoriesScreen() {
             style={styles.card}
             onPress={() => navigation.navigate('Subcategories', { categoryId: item.id })}
           >
+      
             <View>
-              <Text style={styles.cardTitle}>{item.name}</Text>
+              <View>
+  <Text style={styles.cardTitle}>{item.name}</Text>
+  <Text>{subCatCounts[item.id] || 0} subcategories</Text>
+</View>
             </View>
             <View style={styles.cardActions}>
               <Pressable style={styles.smallButton} onPress={() => openEdit(item)}>
@@ -155,7 +199,7 @@ export function CategoriesScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </RNSafeAreaView>
   );
 }
 
@@ -165,13 +209,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   header: {
-    padding: 20,
+    padding: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 35,
     fontWeight: '700',
     color: '#0f172a',
   },
@@ -188,17 +232,23 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 20,
     paddingBottom: 24,
+    gap: 2
   },
-  card: {
+
+card: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 12,
+    marginHorizontal:4,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 2,
+    width: '48%',
+    height:180,
   },
+
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -281,4 +331,30 @@ const styles = StyleSheet.create({
   saveText: {
     color: '#ffffff',
   },
+  textInput: {
+  width:250,
+   borderWidth: 1,
+   borderRadius:8,
+   borderColor:'lightgrey',
+   marginLeft: 10
+  },
+  
+  search_order:{
+     flexDirection: 'row',
+     alignItems: 'center',
+     paddingHorizontal: 10,
+     paddingBottom: '10%'
+  },  
+
+ pickerdrop: {
+  width: 90,
+  borderWidth: 1,
+  borderColor: 'lightgrey',
+  borderRadius: 8,
+  marginLeft: 5,
+  overflow: 'hidden',
+  height: 43
+}
+
+
 });

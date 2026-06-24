@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { Category, FlashcardSet, Subcategory } from '../types/flashcard';
@@ -42,7 +43,7 @@ export function SetDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.page}>
+    <RNSafeAreaView style={styles.page}>
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.back}>Back</Text>
@@ -81,7 +82,7 @@ export function SetDetailScreen() {
       <View style={styles.content}>
         {activeTab === 'study' ? <StudyScreen setId={setId} /> : <LibraryScreen setId={setId} />}
       </View>
-    </SafeAreaView>
+    </RNSafeAreaView>
   );
 }
 

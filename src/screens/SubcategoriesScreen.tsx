@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { Category, Subcategory } from '../types/flashcard';
 
@@ -114,7 +115,7 @@ export function SubcategoriesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.page}>
+    <RNSafeAreaView style={styles.page}>
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.back}>Back</Text>
@@ -177,7 +178,7 @@ export function SubcategoriesScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </RNSafeAreaView>
   );
 }
 

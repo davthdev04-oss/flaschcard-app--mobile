@@ -19,7 +19,8 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.davthedev04.flashcardapp"
     },
     "extra": {
       "SUPABASE_URL": "https://pzcgjnebrgsbeirocgrq.supabase.co",

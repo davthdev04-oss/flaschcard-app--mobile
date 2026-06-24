@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { FlashcardSet, Subcategory, Category } from '../types/flashcard';
 
@@ -119,7 +120,7 @@ export function FlashcardSetsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.page}>
+    <RNSafeAreaView style={styles.page}>
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.back}>Back</Text>
@@ -192,7 +193,7 @@ export function FlashcardSetsScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </RNSafeAreaView>
   );
 }
 

@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { Flashcard, FlashcardFormData, Difficulty, HintLanguage } from '../types/flashcard';
 
 interface LibraryScreenProps {
@@ -174,7 +175,7 @@ export function LibraryScreen({ setId }: LibraryScreenProps) {
   };
 
   return (
-    <SafeAreaView style={styles.page}>
+    <RNSafeAreaView style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.title}>Manage Cards</Text>
         <View style={styles.headerButtons}>
@@ -307,7 +308,7 @@ export function LibraryScreen({ setId }: LibraryScreenProps) {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </RNSafeAreaView>
   );
 }
 
