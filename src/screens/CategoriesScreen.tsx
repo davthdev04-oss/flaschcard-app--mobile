@@ -28,6 +28,7 @@ export function CategoriesScreen() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [name, setName] = useState('');
   const [subCatCounts, setSubCatCounts] = useState<Record<string, number>>({});
+  const [flahCardCount, setFlashCardCount] = useState<Record<string, number>>({})
 
   useEffect(() => {
     fetchCategories();
@@ -165,14 +166,21 @@ const fetchSubCat = async () => {
           onPress={() => openEdit(item)}
   />
             <View>
-              <View style={styles.textContainer}>
-             <Text style={styles.cardTitle}>{item.name}</Text>
-             
-              </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.cardTitle}>{item.name}</Text>
+             </View>
+             <Ionicons style={styles.cardIcon} name="radio-button-off" size={60} color="grey"></Ionicons>
             </View>
             
             <View style={styles.cardActions}>
                
+            </View>
+            <View style={styles.infoContainer}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+  <Ionicons name="folder-outline" size={14} color="black" />
+  <Text>{subCatCounts[item.id] || 0}</Text>
+</View>
+            <Ionicons name="documents-outline" size={14} color="black" />
             </View>
           </TouchableOpacity>
         )}
@@ -268,21 +276,35 @@ card: {
   },
 
   textContainer:{
-    marginTop:50,
+    marginTop:70,
   },
 
   cardTitle: {
     position:"absolute",
     top: 20,
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: '#111827',
   },
+
+  cardIcon:{
+    position: "absolute"
+  }, 
+
+
   cardActions: {
     marginTop: 12,
     flexDirection: 'row',
     gap: 10,
   },
+
+  infoContainer:{
+   marginTop:50,
+   flexDirection:"row",
+   gap:35
+
+  },
+
   smallButton: {
     paddingHorizontal: 14,
     paddingVertical: 8,
