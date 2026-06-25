@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { Category } from '../types/flashcard';
+import { Ionicons }from '@expo/vector-icons'
 
 export function CategoriesScreen() {
   const navigation = useNavigation();
@@ -123,7 +124,11 @@ const fetchSubCat = async () => {
       <View style={styles.header}>
         <Text style={styles.title}>Library</Text>
         <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-          <Text style={styles.addButtonText}>Add</Text>
+          <Ionicons
+    name="add"
+    size={28}
+    color="white"
+  />
         </TouchableOpacity>
       </View>
 
@@ -134,10 +139,11 @@ const fetchSubCat = async () => {
          <View style={styles.pickerdrop}>
           <Picker
           style={{marginRight: -8 }}
-           selectedValue= "A-Z"
+           selectedValue= "Sort"
            mode="dropdown"
+          
           >
-          <Picker.Item label="A-Z" value="A-Z" />
+          <Picker.Item label="Sort" value="Sort" />
         </Picker>
         </View>
       </View>
@@ -162,14 +168,13 @@ const fetchSubCat = async () => {
   <Text>{subCatCounts[item.id] || 0} subcategories</Text>
 </View>
             </View>
-            <View style={styles.cardActions}>
-              <Pressable style={styles.smallButton} onPress={() => openEdit(item)}>
-                <Text style={styles.smallButtonText}>Edit</Text>
-              </Pressable>
-              <Pressable style={[styles.smallButton, styles.deleteButton]} onPress={() => handleDelete(item)}>
-                <Text style={[styles.smallButtonText, styles.deleteText]}>Delete</Text>
-              </Pressable>
-            </View>
+    
+    <Ionicons style={styles.ionicon}
+      name="ellipsis-vertical"
+      size={20}
+      onPress={() => handleDelete(item)}
+    />
+
           </TouchableOpacity>
         )}
       />
@@ -220,11 +225,18 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   addButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    backgroundColor: '#3b82f6',
-    borderRadius: 12,
+  position: 'absolute',
+  top:675,
+  left: 300,
+  width: 55,
+  height: 55,
+  borderRadius: 28,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: '#007AFF',
+  zIndex: 1,
   },
+
   addButtonText: {
     color: '#ffffff',
     fontWeight: '700',
@@ -237,7 +249,7 @@ const styles = StyleSheet.create({
 
 card: {
     backgroundColor: '#ffffff',
-    borderRadius: 10,
+    borderRadius: 24,
     padding: 20,
     marginBottom: 12,
     marginHorizontal:4,
@@ -250,10 +262,13 @@ card: {
   },
 
   cardTitle: {
+    position: 'absolute',
+    top:70,
     fontSize: 18,
     fontWeight: '700',
     color: '#111827',
   },
+
   cardActions: {
     marginTop: 12,
     flexDirection: 'row',
@@ -331,12 +346,15 @@ card: {
   saveText: {
     color: '#ffffff',
   },
+
   textInput: {
-  width:250,
+  flex: 1,
+   width:250,
    borderWidth: 1,
-   borderRadius:8,
+   borderRadius:16,
    borderColor:'lightgrey',
-   marginLeft: 10
+   marginLeft: 10,
+   paddingHorizontal: 16
   },
   
   search_order:{
@@ -347,14 +365,20 @@ card: {
   },  
 
  pickerdrop: {
-  width: 90,
+  width: 100,
   borderWidth: 1,
   borderColor: 'lightgrey',
-  borderRadius: 8,
+  borderRadius: 16,
   marginLeft: 5,
   overflow: 'hidden',
-  height: 43
-}
+  height: 43,
+  justifyContent: 'center'
+},
 
+ionicon: {
+  position: 'absolute',
+  top: 30,
+  right: 5,
+},
 
 });
