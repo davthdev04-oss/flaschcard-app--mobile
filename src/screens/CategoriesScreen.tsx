@@ -11,12 +11,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { Category } from '../types/flashcard';
-import { Ionicons }from '@expo/vector-icons'
+import { relative } from 'node:path';
+import { isAbsolute } from 'node:path';
 
 export function CategoriesScreen() {
   const navigation = useNavigation();
@@ -124,11 +126,7 @@ const fetchSubCat = async () => {
       <View style={styles.header}>
         <Text style={styles.title}>Library</Text>
         <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-          <Ionicons
-    name="add"
-    size={28}
-    color="white"
-  />
+          <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
       </View>
 
@@ -139,11 +137,10 @@ const fetchSubCat = async () => {
          <View style={styles.pickerdrop}>
           <Picker
           style={{marginRight: -8 }}
-           selectedValue= "Sort"
+           selectedValue= "A-Z"
            mode="dropdown"
-          
           >
-          <Picker.Item label="Sort" value="Sort" />
+          <Picker.Item label="A-Z" value="A-Z" />
         </Picker>
         </View>
       </View>
@@ -161,20 +158,22 @@ const fetchSubCat = async () => {
             style={styles.card}
             onPress={() => navigation.navigate('Subcategories', { categoryId: item.id })}
           >
-      
+            <Ionicons
+          style={styles.menuIcon}
+          name="ellipsis-vertical"
+          size={24}
+          onPress={() => openEdit(item)}
+  />
             <View>
-              <View>
-  <Text style={styles.cardTitle}>{item.name}</Text>
-  <Text>{subCatCounts[item.id] || 0} subcategories</Text>
-</View>
+              <View style={styles.textContainer}>
+             <Text style={styles.cardTitle}>{item.name}</Text>
+             
+              </View>
             </View>
-    
-    <Ionicons style={styles.ionicon}
-      name="ellipsis-vertical"
-      size={20}
-      onPress={() => handleDelete(item)}
-    />
-
+            
+            <View style={styles.cardActions}>
+               
+            </View>
           </TouchableOpacity>
         )}
       />
@@ -182,7 +181,18 @@ const fetchSubCat = async () => {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
+            <Pressable
+            style={styles.closeButton}
+            onPress={() => {
+            setModalVisible(false);
+            setName('');
+            setEditingCategory(null);
+          }}><Ionicons name="close" size={24} /></Pressable>
+
             <Text style={styles.modalTitle}>{editingCategory ? 'Edit Category' : 'New Category'}</Text>
+              <Pressable
+    
+  ></Pressable>
             <TextInput
               style={styles.input}
               placeholder="Category name"
@@ -195,10 +205,12 @@ const fetchSubCat = async () => {
                 setName('');
                 setEditingCategory(null);
               }}>
-                <Text style={styles.actionText}>Cancel</Text>
               </Pressable>
               <Pressable style={[styles.actionButton, styles.save]} onPress={handleSubmit}>
                 <Text style={[styles.actionText, styles.saveText]}>Save</Text>
+              </Pressable>
+              <Pressable style={styles.deleteButton} onPress={handleDelete} > 
+                <Text>Delete</Text>
               </Pressable>
             </View>
           </View>
@@ -225,18 +237,11 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   addButton: {
-  position: 'absolute',
-  top:675,
-  left: 300,
-  width: 55,
-  height: 55,
-  borderRadius: 28,
-  justifyContent: 'center',
-  alignItems: 'center',
-  backgroundColor: '#007AFF',
-  zIndex: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
   },
-
   addButtonText: {
     color: '#ffffff',
     fontWeight: '700',
@@ -248,8 +253,9 @@ const styles = StyleSheet.create({
   },
 
 card: {
+    position:"relative",
     backgroundColor: '#ffffff',
-    borderRadius: 24,
+    borderRadius: 10,
     padding: 20,
     marginBottom: 12,
     marginHorizontal:4,
@@ -261,14 +267,17 @@ card: {
     height:180,
   },
 
+  textContainer:{
+    marginTop:50,
+  },
+
   cardTitle: {
-    position: 'absolute',
-    top:70,
+    position:"absolute",
+    top: 20,
     fontSize: 18,
     fontWeight: '700',
     color: '#111827',
   },
-
   cardActions: {
     marginTop: 12,
     flexDirection: 'row',
@@ -282,6 +291,7 @@ card: {
   },
   deleteButton: {
     backgroundColor: '#fecaca',
+    padding:12, 
   },
   smallButtonText: {
     color: '#0f172a',
@@ -295,6 +305,13 @@ card: {
     marginTop: 80,
     color: '#64748b',
   },
+
+  menuIcon:{
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  }, 
+
   modalBackdrop: {
     flex: 1,
     alignItems: 'center',
@@ -303,6 +320,7 @@ card: {
     padding: 20,
   },
   modalContent: {
+    position:'relative',
     width: '100%',
     backgroundColor: '#ffffff',
     borderRadius: 22,
@@ -316,7 +334,7 @@ card: {
   input: {
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    borderRadius: 14,
+    borderRadius: 2,
     padding: 14,
     fontSize: 16,
     color: '#0f172a',
@@ -333,8 +351,10 @@ card: {
     alignItems: 'center',
   },
   cancel: {
-    backgroundColor: '#e2e8f0',
-    marginRight: 10,
+   position: 'absolute',
+top: 12,
+right: 12,
+  
   },
   save: {
     backgroundColor: '#2563eb',
@@ -346,15 +366,12 @@ card: {
   saveText: {
     color: '#ffffff',
   },
-
   textInput: {
-  flex: 1,
-   width:250,
+  width:250,
    borderWidth: 1,
-   borderRadius:16,
+   borderRadius:8,
    borderColor:'lightgrey',
-   marginLeft: 10,
-   paddingHorizontal: 16
+   marginLeft: 10
   },
   
   search_order:{
@@ -365,20 +382,25 @@ card: {
   },  
 
  pickerdrop: {
-  width: 100,
+  width: 90,
   borderWidth: 1,
   borderColor: 'lightgrey',
-  borderRadius: 16,
+  borderRadius: 8,
   marginLeft: 5,
   overflow: 'hidden',
-  height: 43,
-  justifyContent: 'center'
+  height: 43
 },
 
-ionicon: {
+ closeButton:{
   position: 'absolute',
-  top: 30,
-  right: 5,
-},
+  top: 12,
+  right: 12,
+  zIndex: 1,
+ },
+
+ ionicons:{
+  flexDirection:"row",
+
+ }
 
 });
