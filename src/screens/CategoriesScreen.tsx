@@ -17,8 +17,10 @@ import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { Category } from '../types/flashcard';
-import { relative } from 'node:path';
-import { isAbsolute } from 'node:path';
+import CategoryCard from './CategoryCard';
+import SearchBar from '../components/SearchBar';
+import AddButton from '../components/AdddButton';
+
 
 export function CategoriesScreen() {
   const navigation = useNavigation();
@@ -28,7 +30,10 @@ export function CategoriesScreen() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [name, setName] = useState('');
   const [subCatCounts, setSubCatCounts] = useState<Record<string, number>>({});
-  const [flahCardCount, setFlashCardCount] = useState<Record<string, number>>({})
+  const [flashCardCount, setFlashCardCount] = useState<Record<string, number>>({})
+  const [search, setSearch] = useState("")
+  const [sort, setSort] = useState("az");
+  
 
   useEffect(() => {
     fetchCategories();
@@ -122,69 +127,68 @@ const fetchSubCat = async () => {
     setModalVisible(true);
   };
 
+ const filteredCategories = categories
+  .filter(category =>
+    category.name
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  )
+  .sort((a, b) => {
+    if (sort === "az") {
+      return a.name.localeCompare(b.name);
+    }
+
+    return b.name.localeCompare(a.name);
+  });
+
+
   return (
     <RNSafeAreaView style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.title}>Library</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-          <Text style={styles.addButtonText}>Add</Text>
-        </TouchableOpacity>
+     <AddButton
+    title="Add"
+    onPress={() => setModalVisible(true)}
+/>
       </View>
 
-      <View 
-      style={styles.search_order}>
-        <TextInput style={styles.textInput}
-        placeholder='Search'/>
-         <View style={styles.pickerdrop}>
-          <Picker
-          style={{marginRight: -8 }}
-           selectedValue= "A-Z"
-           mode="dropdown"
-          >
-          <Picker.Item label="A-Z" value="A-Z" />
-        </Picker>
-        </View>
-      </View>
+    <SearchBar
+    value={search}
+    onChangeText={setSearch}
+    sortValue={sort}
+    onSortChange={setSort}
+/>
   
-      <FlatList 
-      numColumns={2}
-        data={categories}
-        keyExtractor={(item) => item.id}
-        refreshing={loading}
-        onRefresh={fetchCategories}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>No categories yet.</Text>}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('Subcategories', { categoryId: item.id })}
-          >
-            <Ionicons
-          style={styles.menuIcon}
-          name="ellipsis-vertical"
-          size={24}
-          onPress={() => openEdit(item)}
+     <FlatList
+  numColumns={2}
+  columnWrapperStyle={{
+    justifyContent: "space-between",
+    marginBottom: 8,
+  }}
+
+  
+  data={filteredCategories}
+  keyExtractor={(item) => item.id}
+  refreshing={loading}
+  onRefresh={fetchCategories}
+  contentContainerStyle={styles.list}
+  ListEmptyComponent={
+    <Text style={styles.empty}>No categories yet.</Text>
+  }
+  renderItem={({ item }) => (
+  <CategoryCard
+    category={item}
+    subcategoryCount={subCatCounts[item.id] || 0}
+    flashcardCount={flashCardCount[item.id] || 0}
+    onPress={() =>
+      navigation.navigate("Subcategories", {
+        categoryId: item.id,
+      })
+    }
+    onEdit={() => openEdit(item)}
   />
-            <View>
-            <View style={styles.textContainer}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-             </View>
-             <Ionicons style={styles.cardIcon} name="radio-button-off" size={60} color="grey"></Ionicons>
-            </View>
-            
-            <View style={styles.cardActions}>
-               
-            </View>
-            <View style={styles.infoContainer}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-  <Ionicons name="folder-outline" size={14} color="black" />
-  <Text>{subCatCounts[item.id] || 0}</Text>
-</View>
-            <Ionicons name="documents-outline" size={14} color="black" />
-            </View>
-          </TouchableOpacity>
-        )}
-      />
+)}
+/>
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
@@ -255,55 +259,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   list: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 24,
-    gap: 2
   },
 
-card: {
-    position:"relative",
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 12,
-    marginHorizontal:4,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
-    width: '48%',
-    height:180,
-  },
 
-  textContainer:{
-    marginTop:70,
-  },
 
   cardTitle: {
-    position:"absolute",
-    top: 20,
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-  },
-
-  cardIcon:{
-    position: "absolute"
-  }, 
+  fontSize: 20,
+  fontWeight: "700",
+  marginTop: 18,
+},
 
 
-  cardActions: {
+cardActions: {
     marginTop: 12,
     flexDirection: 'row',
     gap: 10,
   },
 
-  infoContainer:{
-   marginTop:50,
-   flexDirection:"row",
-   gap:35
+  infoContainer: {
+  marginTop: "auto",
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+},
 
-  },
 
   smallButton: {
     paddingHorizontal: 14,
