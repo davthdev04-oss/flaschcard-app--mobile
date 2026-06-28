@@ -202,6 +202,12 @@ const filteredCategories = categories.filter((category) =>
       <Text style={styles.title}>Library</Text>
     </View>
 
+    <TouchableOpacity>
+      <View style={styles.editButton}>
+        <Text>Edit</Text>
+      </View>
+    </TouchableOpacity>
+
     {/* Search + Sort */}
     <View style={styles.search_order}>
       <TextInput
@@ -441,4 +447,10 @@ const styles = StyleSheet.create({
     // Android shadow
     elevation: 8,
   },
+
+  editButton:{
+    flexDirection:"row",
+    justifyContent: "flex-end",
+    marginRight: 25
+  }
 })
