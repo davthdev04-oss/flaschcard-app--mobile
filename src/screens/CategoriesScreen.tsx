@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -7,216 +8,394 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
-} from 'react-native';
+} from "react-native";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
-import { supabase } from '../lib/supabase';
-import { Category } from '../types/flashcard';
-import CategoryCard from './CategoryCard';
-import AddButton from '../components/AdddButton';
+import { useNavigation } from "@react-navigation/native";
 
-// Import our custom Modal architecture
-import AppModal from '../components/AppModal';
-import ConfirmModal from '../components/ConfirmModal';
+import { supabase } from "../lib/supabase";
+import { Category } from "../types/flashcard";
 
-// Unified Overlay Type State Manager
-type ActiveOverlay = 'manageCategory' | 'sort' | 'deleteConfirm' | null;
+import CategoryCard from "./CategoryCard";
+
+import AppModal from "../components/UI/AppModal";
+import ConfirmModal from "../components/UI/ConfirmModal";
+import BottomSheet from "../components/UI/BottomSheet";
+import Toast from "../components/UI/Toast";
+
+type ActiveOverlay =
+  | "manageCategory"
+  | "sort"
+  | "deleteConfirm"
+  | null;
 
 export function CategoriesScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Single controller state for ALL screen menus
-  const [activeOverlay, setActiveOverlay] = useState<ActiveOverlay>(null);
-  
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [name, setName] = useState('');
-  const [subCatCounts, setSubCatCounts] = useState<Record<string, number>>({});
-  const [flashCardCount, setFlashCardCount] = useState<Record<string, number>>({});
+
+  const [activeOverlay, setActiveOverlay] =
+    useState<ActiveOverlay>(null);
+
+  const [editingCategory, setEditingCategory] =
+    useState<Category | null>(null);
+
+  const [name, setName] = useState("");
+
+  const [subCatCounts, setSubCatCounts] =
+    useState<Record<string, number>>({});
+
+  const [flashCardCount, setFlashCardCount] =
+    useState<Record<string, number>>({});
+
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<'az' | 'za' | 'newest'>('az');
 
-  useEffect(() => {
-    fetchCategories();
-  }, [sort]);
+  const [sort, setSort] =
+    useState<"az" | "za" | "newest">("az");
 
-  useEffect(() => {
-    fetchSubCat();
-  }, []);
+  // Controls the BottomSheet
+  const [isOpen, setIsOpen] = useState(false);
 
-  const fetchCategories = async () => {
-    const orderColumn = sort === 'newest' ? 'created_at' : 'name';
-    const orderOptions = sort === 'za' ? { ascending: false } : { ascending: sort !== 'newest' };
+  const [showToast, setShowToast] = useState(false);
+const [toastMessage, setToastMessage] = useState("");
 
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order(orderColumn, orderOptions);
 
-    if (error) {
-      console.error(error);
-      return;
-    }
+useEffect(() => {
+  fetchCategories();
+}, [sort]);
 
-    setCategories(data || []);
-    setLoading(false);
-  };
+useEffect(() => {
+  fetchSubCat();
+}, []);
 
-  const fetchSubCat = async () => {
-    const { data, error } = await supabase.from('subcategories').select('category_id');
-    if (error) {
-      console.error(error);
-      return;
-    }
-    const counts: Record<string, number> = {};
-    data?.forEach((subcat) => {
-      counts[subcat.category_id] = (counts[subcat.category_id] || 0) + 1;
+const fetchCategories = async () => {
+  setLoading(true);
+
+  const orderColumn =
+    sort === "newest" ? "created_at" : "name";
+
+  const ascending =
+    sort === "az";
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order(orderColumn, {
+      ascending:
+        sort === "newest" ? false : ascending,
     });
-    setSubCatCounts(counts);
-  };
 
-  const closeOverlays = () => {
-    setActiveOverlay(null);
-    setName('');
-    setEditingCategory(null);
-  };
+  if (error) {
+    console.error(error);
+    setLoading(false);
+    return;
+  }
 
-  const handleSubmit = async () => {
-    if (!name.trim()) {
-      Alert.alert('Validation', 'Category name is required.');
+  setCategories(data || []);
+  setLoading(false);
+};
+
+const fetchSubCat = async () => {
+  const { data, error } = await supabase
+    .from("subcategories")
+    .select("category_id");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const counts: Record<string, number> = {};
+
+  data?.forEach((subcategory) => {
+    counts[subcategory.category_id] =
+      (counts[subcategory.category_id] || 0) + 1;
+  });
+
+  setSubCatCounts(counts);
+};
+
+const closeOverlays = () => {
+  setActiveOverlay(null);
+  setEditingCategory(null);
+  setName("");
+  
+};
+
+const handleSubmit = async () => {
+  if (!name.trim()) {
+    Alert.alert(
+      "Validation",
+      "Category name is required."
+    );
+    return;
+  }
+  const categoryName = name.trim();
+
+  if (editingCategory) {
+    const { error } = await supabase
+      .from("categories")
+      .update({ name: name.trim() })
+      .eq("id", editingCategory.id);
+
+    if (error) {
+      console.error(error);
       return;
     }
 
-    if (editingCategory) {
-      const { error } = await supabase
-        .from('categories')
-        .update({ name: name.trim() })
-        .eq('id', editingCategory.id);
-      if (error) console.error(error);
-    } else {
-      const { error } = await supabase.from('categories').insert([{ name: name.trim() }]);
-      if (error) console.error(error);
+    setToastMessage("Category updated!");
+  } else {
+    const { error } = await supabase
+      .from("categories")
+      .insert([{ name: name.trim() }]);
+
+    if (error) {
+      console.error(error);
+      return;
     }
 
-    closeOverlays();
-    fetchCategories();
-  };
+    setToastMessage(`Category "${categoryName}" created!`);
+  }
 
-  const runDelete = async () => {
-    if (!editingCategory) return;
-    const { error } = await supabase.from('categories').delete().eq('id', editingCategory.id);
-    if (error) console.error(error);
-    closeOverlays();
-    fetchCategories();
-  };
+  setShowToast(true);
 
-  const openEdit = (category: Category) => {
-    setEditingCategory(category);
-    setName(category.name);
-    setActiveOverlay('manageCategory');
-  };
+  closeOverlays();
+  fetchCategories();
+};
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(search.toLowerCase()),
-  );
+
+const runDelete = async () => {
+  if (!editingCategory) return;
+
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("id", editingCategory.id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  closeOverlays();
+  fetchCategories();
+};
+
+const openEdit = (category: Category) => {
+  setEditingCategory(category);
+  setName(category.name);
+  setActiveOverlay("manageCategory");
+};
+
+const filteredCategories = categories.filter((category) =>
+  category.name
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
 
   return (
-    <RNSafeAreaView style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Library</Text>
-        <AddButton title="Add" onPress={() => setActiveOverlay('manageCategory')} />
-      </View>
+  <RNSafeAreaView style={styles.page}>
 
-      <View style={styles.search_order}>
-        <TextInput
-          style={styles.textInput}
-          placeholder='Search'
-          value={search}
-          onChangeText={setSearch}
+    {/* Header */}
+    <View style={styles.header}>
+      <Text style={styles.title}>Library</Text>
+    </View>
+
+    {/* Search + Sort */}
+    <View style={styles.search_order}>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Search"
+        value={search}
+        onChangeText={setSearch}
+      />
+
+      <TouchableOpacity
+        style={styles.sortButton}
+        onPress={() => setActiveOverlay("sort")}
+      >
+        <Ionicons
+          name="filter-outline"
+          size={18}
+          color="#0f172a"
+          style={styles.sortButtonIcon}
         />
-        <TouchableOpacity style={styles.sortButton} onPress={() => setActiveOverlay('sort')}>
-          <Ionicons name="filter-outline" size={18} color="#0f172a" style={styles.sortButtonIcon} />
-          <Text style={styles.sortButtonText}>
-            {sort === 'az' ? 'A-Z' : sort === 'za' ? 'Z-A' : 'Newest'}
-          </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* 1. REFACTORED SORT OVERLAY */}
-      <AppModal isOpen={activeOverlay === 'sort'} onClose={closeOverlays}>
-        <Text style={styles.modalTitle}>Sort categories</Text>
-        {(['az', 'za', 'newest'] as const).map((option) => (
+        <Text style={styles.sortButtonText}>
+          {sort === "az"
+            ? "A-Z"
+            : sort === "za"
+            ? "Z-A"
+            : "Newest"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+
+    {/* Sort Modal */}
+    <BottomSheet
+      visible={activeOverlay === "sort"}
+      onClose={closeOverlays}
+    >
+      <Text style={styles.modalTitle}>
+        Sort Categories
+      </Text>
+
+      {(["az", "za", "newest"] as const).map((option) => (
+        <Pressable
+          key={option}
+          style={[
+            styles.sortOptionItem,
+            sort === option &&
+              styles.sortOptionSelected,
+          ]}
+          onPress={() => {
+            setSort(option);
+            closeOverlays();
+          }}
+        >
+          <Text style={styles.sortOptionText}>
+            {option === "az"
+              ? "A-Z"
+              : option === "za"
+              ? "Z-A"
+              : "Newest"}
+          </Text>
+        </Pressable>
+      ))}
+    </BottomSheet>
+
+    {/* Add / Edit Category */}
+    <BottomSheet
+      visible={activeOverlay === "manageCategory"}
+      onClose={closeOverlays}
+    >
+      <Text style={styles.modalTitle}>
+        {editingCategory
+          ? "Edit Category"
+          : "New Category"}
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Category name"
+        value={name}
+        onChangeText={setName}
+      />
+
+      <View style={styles.modalActions}>
+
+        <Pressable
+          style={[
+            styles.actionButton,
+            styles.save,
+          ]}
+          onPress={handleSubmit}
+        >
+          <Text style={styles.saveText}>
+            Save
+          </Text>
+        </Pressable>
+
+        {editingCategory && (
           <Pressable
-            key={option}
-            style={[styles.sortOptionItem, sort === option && styles.sortOptionSelected]}
-            onPress={() => {
-              setSort(option);
-              closeOverlays();
-            }}
+            style={styles.deleteButton}
+            onPress={() =>
+              setActiveOverlay("deleteConfirm")
+            }
           >
-            <Text style={styles.sortOptionText}>
-              {option === 'az' ? 'A-Z' : option === 'za' ? 'Z-A' : 'Newest'}
+            <Text style={styles.deleteButtonText}>
+              Delete
             </Text>
           </Pressable>
-        ))}
-      </AppModal>
-
-      {/* 2. REFACTORED ADD / EDIT OVERLAY */}
-      <AppModal isOpen={activeOverlay === 'manageCategory'} onClose={closeOverlays}>
-        <Text style={styles.modalTitle}>{editingCategory ? 'Edit Category' : 'New Category'}</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Category name"
-          value={name}
-          onChangeText={setName}
-        />
-        <View style={styles.modalActions}>
-          <Pressable style={[styles.actionButton, styles.save]} onPress={handleSubmit}>
-            <Text style={styles.saveText}>Save</Text>
-          </Pressable>
-          {editingCategory && (
-            <Pressable 
-              style={styles.deleteButton} 
-              onPress={() => setActiveOverlay('deleteConfirm')}
-            >
-              <Text style={styles.deleteButtonText}>Delete</Text>
-            </Pressable>
-          )}
-        </View>
-      </AppModal>
-
-      {/* 3. NEW CUSTOM IN-APP DELETION CONFIRMATION */}
-      <ConfirmModal
-        isOpen={activeOverlay === 'deleteConfirm'}
-        categoryName={editingCategory?.name || ''}
-        onClose={() => setActiveOverlay('manageCategory')} // Jumps back to edit if canceled
-        onConfirm={runDelete}
-      />
-
-      <FlatList
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: "space-between", marginBottom: 8 }}
-        data={filteredCategories}
-        keyExtractor={(item) => item.id}
-        refreshing={loading}
-        onRefresh={fetchCategories}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>No categories yet.</Text>}
-        renderItem={({ item }) => (
-          <CategoryCard
-            category={item}
-            subcategoryCount={subCatCounts[item.id] || 0}
-            flashcardCount={flashCardCount[item.id] || 0}
-            onPress={() => navigation.navigate("Subcategories", { categoryId: item.id })}
-            onEdit={() => openEdit(item)}
-          />
         )}
+
+      </View>
+    </BottomSheet>
+
+    {/* Delete Confirmation */}
+    <ConfirmModal
+      isOpen={
+        activeOverlay === "deleteConfirm"
+      }
+      categoryName={
+        editingCategory?.name || ""
+      }
+      onClose={() =>
+        setActiveOverlay("manageCategory")
+      }
+      onConfirm={runDelete}
+    />
+
+    <Toast
+  isOpen={showToast}
+  message={toastMessage}
+  onClose={() => setShowToast(false)}
+/>
+
+    {/* Categories */}
+    <FlatList
+      data={filteredCategories}
+      numColumns={2}
+      keyExtractor={(item) => item.id}
+      refreshing={loading}
+      onRefresh={fetchCategories}
+      columnWrapperStyle={{
+        justifyContent: "space-between",
+        marginBottom: 8,
+      }}
+      contentContainerStyle={styles.list}
+      ListEmptyComponent={
+        <Text style={styles.empty}>
+          No categories yet.
+        </Text>
+      }
+      renderItem={({ item }) => (
+        <CategoryCard
+          category={item}
+          subcategoryCount={
+            subCatCounts[item.id] || 0
+          }
+          flashcardCount={
+            flashCardCount[item.id] || 0
+          }
+          onPress={() =>
+            navigation.navigate(
+              "Subcategories",
+              {
+                categoryId: item.id,
+              }
+            )
+          }
+          onEdit={() => openEdit(item)}
+        />
+      )}
+    />
+
+    {/* Floating Add Button */}
+    <Pressable
+      style={styles.fab}
+      onPress={() =>
+        setActiveOverlay("manageCategory")
+      }
+    >
+      <Ionicons
+        name="add-circle"
+        size={64}
+        color="#8B5CF6"
       />
-    </RNSafeAreaView>
-  );
+    </Pressable>
+
+    {/* Bottom Sheet */}
+    <BottomSheet
+      visible={isOpen}
+      onClose={() => setIsOpen(false)}
+    >
+      <Text>Bottom Sheet</Text>
+    </BottomSheet>
+
+  </RNSafeAreaView>
+);
 }
 
 // Keep your existing styles down here unchanged...
@@ -242,4 +421,24 @@ const styles = StyleSheet.create({
   deleteButtonText: { color: '#ef4444', fontWeight: '600' },
   list: { padding: 10 },
   empty: { textAlign: 'center', color: '#64748b', marginTop: 40 },
-});
+   fab: {
+    position: "absolute",
+    bottom: 50,
+    right: 20,
+
+    // Makes it appear above everything else
+    zIndex: 100,
+
+    // iOS shadow
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+
+    // Android shadow
+    elevation: 8,
+  },
+})

@@ -1,0 +1,6 @@
+<Pressable style={styles.smallButton} onPress={() => openEdit(item)}>
+                <Text style={styles.smallButtonText}>Edit</Text>
+              </Pressable>
+              <Pressable style={[styles.smallButton, styles.deleteButton]} onPress={() => handleDelete(item)}>
+                <Text style={[styles.smallButtonText, styles.deleteText]}>Delete</Text>
+              </Pressable>

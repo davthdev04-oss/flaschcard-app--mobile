@@ -24,23 +24,29 @@ export default function AppModal({ isOpen, onClose, children }: AppModalProp) {
 
 const styles = StyleSheet.create({
   modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'flex-end', // Slides up up cleanly from bottom like a sheet
-  },
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.4)",
+  justifyContent: "center",
+  alignItems: "center",
+},
   modalContent: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 40,
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
+  width: "85%",
+  backgroundColor: "#fff",
+
+  borderRadius: 20,
+
+  padding: 24,
+
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 4,
   },
+  shadowOpacity: 0.2,
+  shadowRadius: 8,
+
+  elevation: 8,
+},
   closeButton: {
     position: 'absolute',
     top: 16,

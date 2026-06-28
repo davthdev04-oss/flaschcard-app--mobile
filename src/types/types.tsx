@@ -17,7 +17,7 @@ export interface ConfirmModalProps {
 
 // 3. For BottomSheet.tsx
 export interface BottomSheetProps {
-  isOpen: boolean;
+  visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
 }
