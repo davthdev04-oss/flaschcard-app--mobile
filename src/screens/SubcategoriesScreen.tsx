@@ -126,6 +126,20 @@ export function SubcategoriesScreen() {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity
+  style={styles.card}
+  onPress={() =>
+    navigation.navigate("FlashcardSets", {
+      categoryId,
+    })
+  }
+>
+  <Text style={styles.cardTitle}>📚 Flashcard Sets</Text>
+  <Text style={styles.cardSubtitle}>
+    View or create sets without a subcategory.
+  </Text>
+</TouchableOpacity>
+
       <FlatList
         data={subcategories}
         keyExtractor={(item) => item.id}
@@ -136,7 +150,10 @@ export function SubcategoriesScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate('FlashcardSets', { subcategoryId: item.id })}
+            onPress={() => navigation.navigate('FlashcardSets', {
+                                                 categoryId,
+                                                subcategoryId: item.id,
+                                                })}
           >
             <View>
               <Text style={styles.cardTitle}>{item.name}</Text>

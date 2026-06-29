@@ -60,6 +60,8 @@ export function CategoriesScreen() {
   const [showToast, setShowToast] = useState(false);
 const [toastMessage, setToastMessage] = useState("");
 
+const [showMenu, setShowMenu] = useState(false); 
+
 
 useEffect(() => {
   fetchCategories();
@@ -144,7 +146,7 @@ const handleSubmit = async () => {
       return;
     }
 
-    setToastMessage("Category updated!");
+    
   } else {
     const { error } = await supabase
       .from("categories")
@@ -155,9 +157,10 @@ const handleSubmit = async () => {
       return;
     }
 
-    setToastMessage(`Category "${categoryName}" created!`);
+    
   }
 
+  setToastMessage(`Category ${name.trim()} created!`);
   setShowToast(true);
 
   closeOverlays();
@@ -178,8 +181,12 @@ const runDelete = async () => {
     return;
   }
 
+
+
   closeOverlays();
   fetchCategories();
+  setToastMessage(`${editingCategory.name} deleted`);
+  setShowToast(true);
 };
 
 const openEdit = (category: Category) => {
@@ -194,6 +201,11 @@ const filteredCategories = categories.filter((category) =>
     .includes(search.toLowerCase())
 );
 
+const showToastMessage = (message: string) => {
+  setToastMessage(message);
+  setShowToast(true);
+};
+
   return (
   <RNSafeAreaView style={styles.page}>
 
@@ -202,12 +214,12 @@ const filteredCategories = categories.filter((category) =>
       <Text style={styles.title}>Library</Text>
     </View>
 
-    <TouchableOpacity>
-      <View style={styles.editButton}>
-        <Text>Edit</Text>
-      </View>
-    </TouchableOpacity>
-
+   <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
+  <View style={styles.editButton}>
+    <Text>{showMenu? "Done" : "edit"}</Text>
+  </View>
+</TouchableOpacity>
+ 
     {/* Search + Sort */}
     <View style={styles.search_order}>
       <TextInput
@@ -359,11 +371,9 @@ const filteredCategories = categories.filter((category) =>
       renderItem={({ item }) => (
         <CategoryCard
           category={item}
+          showMenu={showMenu}
           subcategoryCount={
             subCatCounts[item.id] || 0
-          }
-          flashcardCount={
-            flashCardCount[item.id] || 0
           }
           onPress={() =>
             navigation.navigate(

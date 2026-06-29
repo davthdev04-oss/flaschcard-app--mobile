@@ -11,10 +11,14 @@ interface FlashcardCardProps {
 }
 
 export function FlashcardCard({ card, onNext, onPrevious, currentIndex, total }: FlashcardCardProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   const toggleFlip = () => setIsFlipped((prev) => !prev);
+  const handleNext = () => {
+  setIsFlipped(false);
+  onNext?.();
+};
 
   return (
     <View style={styles.container}>
@@ -34,12 +38,12 @@ export function FlashcardCard({ card, onNext, onPrevious, currentIndex, total }:
 
       <View style={styles.actions}>
         {onPrevious && (
-          <Pressable style={styles.actionButton} onPress={onPrevious}>
+          <Pressable style={styles.actionButton} onPress={handleNext}>
             <Text style={styles.actionText}>Previous</Text>
           </Pressable>
         )}
         {onNext && (
-          <Pressable style={[styles.actionButton, styles.nextButton]} onPress={onNext}>
+          <Pressable style={[styles.actionButton, styles.nextButton]} onPress={handleNext}>
             <Text style={[styles.actionText, styles.nextText]}>Next</Text>
           </Pressable>
         )}

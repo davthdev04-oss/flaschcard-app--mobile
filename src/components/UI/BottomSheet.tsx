@@ -18,19 +18,30 @@ export default function BottomSheet({
   children,
 }: BottomSheetProps) {
   return (
-  <Modal
-    visible={visible}
-    transparent
-    animationType="slide"
-    onRequestClose={onClose}
-  >
-    <Pressable style={styles.overlay} onPress={onClose}>
-      <Pressable style={styles.sheet} onPress={() => {}}>
-        {children}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      {/* Dark overlay */}
+      <Pressable
+        style={styles.overlay}
+        onPress={onClose}
+      >
+        {/* Prevent taps inside the sheet from closing it */}
+        <Pressable
+          style={styles.sheet}
+          onPress={(e) => e.stopPropagation()}
+        >
+          {/* Handle */}
+          <View style={styles.handle} />
+
+          {children}
+        </Pressable>
       </Pressable>
-    </Pressable>
-  </Modal>
-);
+    </Modal>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -41,7 +52,7 @@ const styles = StyleSheet.create({
   },
 
   sheet: {
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,

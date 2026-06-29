@@ -14,6 +14,7 @@ type Props = {
   flashcardCount: number;
   onPress: () => void;
   onEdit: () => void;
+  showMenu?: boolean;
 };
 
 export default function CategoryCard({
@@ -22,16 +23,18 @@ export default function CategoryCard({
   flashcardCount,
   onPress,
   onEdit,
+  showMenu,
 }: Props) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
-      <Ionicons
+      {showMenu &&(<Ionicons
         style={styles.menuIcon}
         name="ellipsis-vertical"
         size={22}
         color="#666"
         onPress={onEdit}
       />
+      )}
 
       <View style={styles.middle}>
         <Ionicons
@@ -54,17 +57,6 @@ export default function CategoryCard({
           />
           <Text style={styles.count}>
             {subcategoryCount}
-          </Text>
-        </View>
-
-        <View style={styles.info}>
-          <Ionicons
-            name="document-text-outline"
-            size={16}
-            color="#666"
-          />
-          <Text style={styles.count}>
-            {flashcardCount}
           </Text>
         </View>
       </View>

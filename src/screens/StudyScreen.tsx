@@ -17,6 +17,7 @@ export function StudyScreen({ setId }: StudyScreenProps) {
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | ''>('');
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
     fetchFlashcards();
@@ -97,6 +98,10 @@ export function StudyScreen({ setId }: StudyScreenProps) {
       </View>
     );
   }
+
+
+  
+
 
   return (
     <ScrollView contentContainerStyle={styles.page}>

@@ -18,14 +18,14 @@ import { FlashcardSet, Subcategory, Category } from '../types/flashcard';
 
 type RouteParams = {
   params: {
-    subcategoryId: string;
+    categoryId: string;
+    subcategoryId?: string;
   };
 };
 
 export function FlashcardSetsScreen() {
   const navigation = useNavigation();
-  const route = useRoute<RouteParams>();
-  const subcategoryId = route.params.subcategoryId;
+  const route = useRoute<RouteParams>();;
 
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [subcategory, setSubcategory] = useState<Subcategory | null>(null);
@@ -35,37 +35,55 @@ export function FlashcardSetsScreen() {
   const [editingSet, setEditingSet] = useState<FlashcardSet | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const { categoryId, subcategoryId } = route.params;
 
-  useEffect(() => {
-    fetchSubcategory();
-    fetchSets();
-  }, [subcategoryId]);
+ useEffect(() => {
+  fetchSubcategory();
+  fetchSets();
+}, [categoryId, subcategoryId]);
 
-  const fetchSubcategory = async () => {
-    const { data, error } = await supabase
-      .from('subcategories')
-      .select('*, categories(*)')
-      .eq('id', subcategoryId)
-      .single();
+ const fetchSubcategory = async () => {
+  if (!subcategoryId) {
+    setSubcategory(null);
+    return;
+  }
 
-    if (!error) {
-      setSubcategory(data);
-      setCategory((data as any).categories);
-    }
-  };
+  const { data, error } = await supabase
+    .from("subcategories")
+    .select("*, categories(*)")
+    .eq("id", subcategoryId)
+    .single();
+
+  if (!error) {
+    setSubcategory(data);
+    setCategory((data as any).categories);
+  }
+};
 
   const fetchSets = async () => {
-    const { data, error } = await supabase
-      .from('flashcard_sets')
-      .select('*')
-      .eq('subcategory_id', subcategoryId)
-      .order('name', { ascending: true });
+  let query = supabase
+    .from("flashcard_sets")
+    .select("*")
+    .order("name", { ascending: true });
 
-    if (!error) {
-      setSets(data || []);
-    }
-    setLoading(false);
-  };
+  if (subcategoryId) {
+    query = query.eq("subcategory_id", subcategoryId);
+  } else {
+    query = query
+      .eq("category_id", categoryId)
+      .is("subcategory_id", null);
+  }
+
+  const { data, error } = await query;
+
+  if (!error) {
+    setSets(data || []);
+  } else {
+    console.error(error);
+  }
+
+  setLoading(false);
+};
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -81,8 +99,13 @@ export function FlashcardSetsScreen() {
       if (error) console.error(error);
     } else {
       const { error } = await supabase.from('flashcard_sets').insert([
-        { subcategory_id: subcategoryId, name: name.trim(), description: description.trim() || null },
-      ]);
+  {
+    category_id: categoryId,
+    subcategory_id: subcategoryId ?? null,
+    name: name.trim(),
+    description: description.trim() || null,
+  },
+]);
       if (error) console.error(error);
     }
 

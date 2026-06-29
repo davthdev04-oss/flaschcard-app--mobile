@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { ToastProps } from "../types/types";
+import { ToastProps } from "../../types/types";
 
 export default function Toast({
   isOpen,
