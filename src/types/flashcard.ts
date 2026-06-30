@@ -6,6 +6,7 @@ export interface Category {
   id: string;
   name: string;
   created_at: string;
+  is_archived:boolean
 }
 
 export interface Subcategory {

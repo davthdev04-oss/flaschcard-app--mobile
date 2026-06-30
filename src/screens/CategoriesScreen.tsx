@@ -46,8 +46,11 @@ export function CategoriesScreen() {
   const [subCatCounts, setSubCatCounts] =
     useState<Record<string, number>>({});
 
-  const [flashCardCount, setFlashCardCount] =
-    useState<Record<string, number>>({});
+  const [activeCount, setActiveCount] = useState(0);
+
+  const [archivedCount, setArchivedCount] = useState(0);
+
+  const [selectedTab, setSelectedTab] = useState<"active" | "archived">("active");
 
   const [search, setSearch] = useState("");
 
@@ -94,9 +97,24 @@ const fetchCategories = async () => {
     return;
   }
 
+  const { count: active } = await supabase
+  .from("categories")
+  .select("*", { count: "exact", head: true })
+  .eq("is_archived", false);
+
+const { count: archived } = await supabase
+  .from("categories")
+  .select("*", { count: "exact", head: true })
+  .eq("is_archived", true);
+
+
+setActiveCount(active ?? 0);
+setArchivedCount(archived ?? 0);
+
   setCategories(data || []);
   setLoading(false);
 };
+
 
 const fetchSubCat = async () => {
   const { data, error } = await supabase
@@ -126,6 +144,7 @@ const closeOverlays = () => {
 };
 
 const handleSubmit = async () => {
+  
   if (!name.trim()) {
     Alert.alert(
       "Validation",
@@ -195,15 +214,40 @@ const openEdit = (category: Category) => {
   setActiveOverlay("manageCategory");
 };
 
-const filteredCategories = categories.filter((category) =>
-  category.name
+const filteredCategories = categories.filter((category) => {
+  const matchesSearch = category.name
     .toLowerCase()
-    .includes(search.toLowerCase())
-);
+    .includes(search.toLowerCase());
+
+  const matchesTab =
+    selectedTab === "active"
+      ? !category.is_archived
+      : category.is_archived;
+
+  return matchesSearch && matchesTab;
+});
 
 const showToastMessage = (message: string) => {
   setToastMessage(message);
   setShowToast(true);
+};
+
+const archiveCategory = async (id: string) => {
+  await supabase
+    .from("categories")
+    .update({ is_archived: true })
+    .eq("id", id);
+
+  fetchCategories();
+};
+
+const restoreCategory = async (id: string) => {
+  await supabase
+    .from("categories")
+    .update({ is_archived: false })
+    .eq("id", id);
+
+  fetchCategories();
 };
 
   return (
@@ -216,7 +260,8 @@ const showToastMessage = (message: string) => {
 
    <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
   <View style={styles.editButton}>
-    <Text>{showMenu? "Done" : "edit"}</Text>
+    <Text
+    >{showMenu? "Done" : "Edit"}</Text>
   </View>
 </TouchableOpacity>
  
@@ -316,6 +361,33 @@ const showToastMessage = (message: string) => {
         </Pressable>
 
         {editingCategory && (
+  editingCategory.is_archived ? (
+    <Pressable
+      style={styles.archiveButton}
+      onPress={() => {
+        restoreCategory(editingCategory.id);
+        closeOverlays();
+      }}
+    >
+      <Text style={styles.archiveButtonText}>
+        Restore 
+      </Text>
+    </Pressable>
+  ) : (
+    <Pressable
+      style={styles.archiveButton}
+      onPress={() => {
+        archiveCategory(editingCategory.id);
+        closeOverlays();
+      }}
+    >
+      <Text style={styles.archiveButtonText}>
+        Archive({archivedCount})
+      </Text>
+    </Pressable>
+  )
+)}
+        {editingCategory && (
           <Pressable
             style={styles.deleteButton}
             onPress={() =>
@@ -351,17 +423,58 @@ const showToastMessage = (message: string) => {
   onClose={() => setShowToast(false)}
 />
 
+<View style={styles.tabContainer}>
+  <Pressable
+    style={[
+      styles.tab,
+      selectedTab === "active" && styles.activeTab,
+    ]}
+    onPress={() => setSelectedTab("active")}
+  >
+    <Text
+      style={[
+        styles.tabText,
+        selectedTab === "active" && styles.activeTabText,
+      ]}
+    >
+      Active ({activeCount})
+    </Text>
+  </Pressable>
+
+  <Pressable
+    style={[
+      styles.tab,
+      selectedTab === "archived" && styles.activeTab,
+    ]}
+    onPress={() => setSelectedTab("archived")}
+  >
+    <Text
+      style={[
+        styles.tabText,
+        selectedTab === "archived" && styles.activeTabText,
+      ]}
+    >
+      Archived ({archivedCount})
+    </Text>
+  </Pressable>
+</View>
+
     {/* Categories */}
     <FlatList
-      data={filteredCategories}
-      numColumns={2}
-      keyExtractor={(item) => item.id}
-      refreshing={loading}
-      onRefresh={fetchCategories}
-      columnWrapperStyle={{
-        justifyContent: "space-between",
-        marginBottom: 8,
-      }}
+  key={selectedTab}
+  data={filteredCategories}
+  numColumns={selectedTab === "active" ? 2 : 1}
+  keyExtractor={(item) => item.id}
+  refreshing={loading}
+  onRefresh={fetchCategories}
+  columnWrapperStyle={
+    selectedTab === "active"
+      ? {
+          justifyContent: "space-between",
+          marginBottom: 8,
+        }
+      : undefined
+  }
       contentContainerStyle={styles.list}
       ListEmptyComponent={
         <Text style={styles.empty}>
@@ -370,21 +483,17 @@ const showToastMessage = (message: string) => {
       }
       renderItem={({ item }) => (
         <CategoryCard
-          category={item}
-          showMenu={showMenu}
-          subcategoryCount={
-            subCatCounts[item.id] || 0
-          }
-          onPress={() =>
-            navigation.navigate(
-              "Subcategories",
-              {
-                categoryId: item.id,
-              }
-            )
-          }
-          onEdit={() => openEdit(item)}
-        />
+  category={item}
+  showMenu={showMenu}
+  layout={selectedTab === "active" ? "grid" : "list"}
+  onPress={() =>
+    navigation.navigate("Subcategories", {
+      categoryId: item.id,
+    })
+  }
+  onEdit={() => openEdit(item)}
+  onArchive={() => archiveCategory(item.id)}
+/>
       )}
     />
 
@@ -461,6 +570,51 @@ const styles = StyleSheet.create({
   editButton:{
     flexDirection:"row",
     justifyContent: "flex-end",
-    marginRight: 25
-  }
+    marginRight: 25,
+    marginBottom:12,
+  },
+
+    archived:{
+    justifyContent:"center",
+    borderWidth:1,
+    borderRadius:10,
+    borderColor:"lightgrey",
+    paddingHorizontal:50,
+    },
+
+  tabContainer: {
+  flexDirection: "row",
+  backgroundColor: '#f8fafc',
+  borderRadius: 14,
+  padding: 4,
+  marginHorizontal: 16,
+  marginBottom: 16,
+  gap: 12
+},
+
+tab: {
+  flex: 1,
+  height: 44,
+  justifyContent: "center",
+  alignItems: "center",
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "#E5E7EB",
+  backgroundColor: "#FFF",
+},
+
+activeTab: {
+  backgroundColor: "#8B5CF6",
+  borderColor: "#8B5CF6",
+},
+
+tabText: {
+  color: "#6B7280",
+  fontWeight: "600",
+},
+
+activeTabText: {
+  color: "#FFF",
+},
+
 })

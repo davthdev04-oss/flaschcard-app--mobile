@@ -15,6 +15,8 @@ type Props = {
   onPress: () => void;
   onEdit: () => void;
   showMenu?: boolean;
+  onArchive: () => void;
+  layout: "grid" | "list";
 };
 
 export default function CategoryCard({
@@ -23,10 +25,18 @@ export default function CategoryCard({
   flashcardCount,
   onPress,
   onEdit,
+  onArchive,
   showMenu,
+  layout,
 }: Props) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity
+  style={[
+    styles.card,
+    layout === "list" && styles.listCard,
+  ]}
+  onPress={onPress}
+>
       {showMenu &&(<Ionicons
         style={styles.menuIcon}
         name="ellipsis-vertical"
@@ -120,4 +130,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#6B7280",
   },
+
+  listCard: {
+  width: "100%",
+  aspectRatio: undefined,
+  minHeight: 90,
+},
 });
